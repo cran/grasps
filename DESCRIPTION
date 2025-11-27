@@ -1,0 +1,34 @@
+Package: grasps
+Type: Package
+Title: Groupwise Regularized Adaptive Sparse Precision Solution
+Version: 0.1.0
+Authors@R: c(
+    person(given = "Shiying", family = "Xiao",
+           email = "shiying.xiao@outlook.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8846-3258")))
+Maintainer: Shiying Xiao <shiying.xiao@outlook.com>
+Description: Provides a unified framework for sparse-group regularization and
+    precision matrix estimation in Gaussian graphical models. It implements
+    multiple sparse-group penalties, including sparse-group lasso, sparse-group
+    adaptive lasso, sparse-group SCAD, and sparse-group MCP, and solves them
+    efficiently using ADMM-based optimization. The package is designed for
+    high-dimensional network inference where both sparsity and group structure
+    are present.
+License: GPL (>= 3)
+URL: https://github.com/Carol-seven/grasps,
+        https://shiying-xiao.com/grasps/
+BugReports: https://github.com/Carol-seven/grasps/issues
+Encoding: UTF-8
+Imports: igraph, ggforce, ggplot2, grDevices, Rcpp, Rdpack, scales
+LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 7.3.3
+RdMacros: Rdpack
+Suggests: knitr, MASS, quarto, rmarkdown
+VignetteBuilder: knitr, quarto
+NeedsCompilation: yes
+Packaged: 2025-11-24 04:09:47 UTC; csxiao
+Author: Shiying Xiao [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-8846-3258>)
+Repository: CRAN
+Date/Publication: 2025-11-27 19:10:14 UTC
