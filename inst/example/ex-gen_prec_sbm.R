@@ -5,7 +5,7 @@ set.seed(1234)
 
 ## block-structured precision matrix based on SBM
 #### case 1: base R distribution
-sim1 <- gen_prec_sbm(d = 100, K = 5,
+sim1 <- gen_prec_sbm(p = 100, K = 5,
                      within.prob = 0.25, between.prob = 0.1,
                      weight.dists = list("gamma", "unif"),
                      weight.paras = list(c(shape = 100, scale = 1e2),
@@ -18,7 +18,7 @@ plot(sim1)
 my_gamma <- function(n) {
   rgamma(n, shape = 1e4, scale = 1e2)
 }
-sim2 <- gen_prec_sbm(d = 100, K = 5,
+sim2 <- gen_prec_sbm(p = 100, K = 5,
                      within.prob = 0.2, between.prob = 0.05,
                      weight.dists = list(my_gamma, "unif"),
                      weight.paras = list(NULL,

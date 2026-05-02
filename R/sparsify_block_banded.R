@@ -4,11 +4,11 @@
 #' Make a precision-like matrix block-banded according to group membership,
 #' keeping only entries within specified group neighborhoods.
 #'
-#' @param mat A \eqn{d \times d} precision-like matrix specifying the base
+#' @param mat A \eqn{p \times p} precision-like matrix specifying the base
 #' matrix to be masked.
 #'
 #' @param membership An integer vector specifying the group membership.
-#' The length of \code{membership} must be consistent with the dimension \eqn{d}.
+#' The length of \code{membership} must be consistent with the dimension \eqn{p}.
 #'
 #' @param neighbor.range An integer (default = 1) specifying the neighbor range,
 #' where groups whose labels differ by at most \code{neighbor.range} are
@@ -30,10 +30,10 @@
 
 sparsify_block_banded <- function(mat, membership, neighbor.range = 1) {
 
-  d <- ncol(mat)
-  if (length(membership) != d) {
-    stop(sprintf("Length of 'membership' (%d) must equal the matrix dimension d (%d).",
-                 length(membership), d))
+  p <- ncol(mat)
+  if (length(membership) != p) {
+    stop(sprintf("Length of 'membership' (%d) must equal the matrix dimension p (%d).",
+                 length(membership), p))
   }
 
   ## determine which entries to keep: membership within 'neighbor.range'

@@ -5,31 +5,37 @@
 
 ## Groupwise Regularized Adaptive Sparse Precision Solution
 
-<!-- badges: start -->
-
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/grasps)](https://CRAN.R-project.org/package=grasps)
 [![GitHub R package version](https://img.shields.io/github/r-package/v/Carol-seven/grasps?label=R%20in%20dev&color=green)](https://github.com/Carol-seven/grasps/blob/main/DESCRIPTION)
 [![GitHub last commit](https://img.shields.io/github/last-commit/Carol-seven/grasps)](https://github.com/Carol-seven/grasps/commits/main)
 [![R-CMD-check](https://github.com/Carol-seven/grasps/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Carol-seven/grasps/actions/workflows/R-CMD-check.yaml)
 [![GitHub License](https://img.shields.io/github/license/Carol-seven/grasps?color=blue)](https://github.com/Carol-seven/grasps/blob/main/LICENSE.md)
-<!-- badges: end -->
 
 The goal of **grasps** is to provide a collection of statistical methods that
 incorporate both element-wise and group-wise penalties to estimate a precision
 matrix, making them user-friendly and useful for researchers and practitioners.
 
-$$\hat{\Omega}(\lambda,\alpha,\gamma) = {\arg\min}_{\Omega \succ 0}
-\{ -\log\det(\Omega) + \text{tr}(S\Omega) + \lambda P_{\alpha,\gamma}(\Omega) \},$$
-
-$$P_{\alpha,\gamma}(\Omega)
-= \alpha P^\text{idv}_\gamma(\Omega) + (1-\alpha) P^\text{grp}_\gamma(\Omega),$$
-
-$$P^\text{idv}_\gamma(\Omega) = \sum_{i,j} p_\gamma(\vert\omega_{ij}\vert),$$
-
-$$P^\text{grp}_\gamma(\Omega)
-= \sum_{g,g^\prime} p_\gamma(\Vert\Omega_{gg^\prime}\Vert_F).$$
+$$
+\hat{\Omega}(\lambda,\alpha,\gamma) = {\arg\min}_{\Omega \succ 0}
+\{ -\log\det(\Omega) + \text{tr}(S\Omega) + \mathcal{P}_{\lambda,\alpha,\gamma}(\Omega) \},
+$$
+$$
+\mathcal{P}_{\lambda,\alpha,\gamma}(\Omega)
+= \alpha \mathcal{P}^\text{idv}_{\lambda,\gamma}(\Omega) + (1-\alpha) \mathcal{P}^\text{grp}_{\lambda,\gamma}(\Omega),
+$$
+$$
+\mathcal{P}^\text{idv}_{\lambda,\gamma}(\Omega)
+= \sum_{i,j} P_{\lambda,\gamma}(\lvert\omega_{ij}\rvert),
+$$
+$$
+\mathcal{P}^\text{grp}_{\lambda,\gamma}(\Omega)
+= \sum_{g,g^\prime} P_{\lambda,\gamma}(\lVert\Omega_{gg^\prime}\rVert_F).
+$$
 
 For more details, see the vignette
 [Penalized Precision Matrix Estimation in grasps](https://shiying-xiao.com/grasps/articles/pen_est#sparse-group-estimator).
+
+![](https://raw.githubusercontent.com/Carol-seven/grasps/refs/heads/main/man/figures/workflow.png)
 
 ## Penalties
 
@@ -53,11 +59,20 @@ for more details.
 
 ## Installation
 
-You can install the development version of **grasps** from
-[GitHub](https://github.com/) with:
+- You can install the released version of **grasps** from
+  [CRAN](https://cran.r-project.org/package=grasps) with:
 
-    # install.packages("devtools")
-    devtools::install_github("Carol-seven/grasps")
+<!-- -->
+
+    install.packages("grasps")
+
+- You can install the development version of **grasps** from
+  [GitHub](https://github.com/Carol-seven/grasps) with:
+
+<!-- -->
+
+    # install.packages("pak")
+    pak::pkg_install("Carol-seven/grasps")
 
 ## Example
 
@@ -68,45 +83,63 @@ library(grasps)
 set.seed(1234)
 
 ## block-structured precision matrix based on SBM
-sim <- gen_prec_sbm(d = 30, K = 3,
+sim <- gen_prec_sbm(p = 30, K = 3,
                     within.prob = 0.25, between.prob = 0.05,
                     weight.dists = list("gamma", "unif"),
                     weight.paras = list(c(shape = 20, rate = 10),
                                         c(min = 0, max = 5)),
                     cond.target = 100)
+## ground truth visualization
+plot(sim)
+```
 
-## synthetic data
+<img src="man/figures/README-unnamed-chunk-2-1.png" alt="" width="100%" />
+
+``` r
+
+## n-by-p data matrix
 library(MASS)
 X <- mvrnorm(n = 20, mu = rep(0, 30), Sigma = sim$Sigma)
 
-## solution
-res <- grasps(X = X, membership = sim$membership, penalty = "adapt", crit = "HBIC")
+## precision matrix: adaptive lasso; BIC
+prec <- grasps(X = X, membership = sim$membership, penalty = "adapt", crit = "BIC")
 
-## visualization
-plot(res)
+## precision matrix visualization
+plot(prec)
 ```
 
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-2-2.png" alt="" width="100%" />
 
 ``` r
 
 ## performance
-performance(hatOmega = res$hatOmega, Omega = sim$Omega)
+performance(hatOmega = prec$hatOmega, Omega = sim$Omega)
 #>      measure    value
-#> 1   sparsity   0.9103
-#> 2  Frobenius  24.6796
-#> 3         KL   7.2063
-#> 4  quadratic  54.1949
-#> 5   spectral  13.1336
-#> 6         TP  22.0000
-#> 7         TN 370.0000
-#> 8         FP  17.0000
-#> 9         FN  26.0000
-#> 10       TPR   0.4583
-#> 11       FPR   0.0439
-#> 12        F1   0.5057
-#> 13       MCC   0.4545
+#> 1   sparsity   0.8805
+#> 2  Frobenius  23.9013
+#> 3         KL   7.6775
+#> 4  quadratic  69.1639
+#> 5   spectral  12.3571
+#> 6         TP  23.0000
+#> 7         TN 358.0000
+#> 8         FP  29.0000
+#> 9         FN  25.0000
+#> 10       TPR   0.4792
+#> 11       FPR   0.0749
+#> 12        F1   0.4600
+#> 13       MCC   0.3904
+
+## adjacency matrix: diagonal = 0; raw partial correlations;
+##                   no thresholding; weighted network
+adj <- prec_to_adj(prec$hatOmega,
+                   diag.zero = TRUE, absolute = FALSE,
+                   threshold = NULL, weighted = TRUE)
+
+## adjacency matrix visualization
+plot(adj)
 ```
+
+<img src="man/figures/README-unnamed-chunk-2-3.png" alt="" width="100%" />
 
 ## Reference
 

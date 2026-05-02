@@ -29,9 +29,9 @@ parameter $\lambda$ to balance sparsity (number of edges) and model fit
 ## Background: Negative Log-Likelihood
 
 
-In a Gaussian graphical model (GGM), the data matrix $X_{n \times d}$
+In a Gaussian graphical model (GGM), the data matrix $X_{n \times p}$
 consists of $n$ independent and identically distributed observations
-$X_1, \dots, X_n$ drawn from $N_d(\mu,\Sigma)$.
+$X_1, \dots, X_n$ drawn from $N_p(\mu,\Sigma)$.
 Let $\Omega = \Sigma^{-1}$ denote the precision matrix, and define the empirical
 covariance matrix as
 $S = n^{-1} \sum_{i=1}^n (X_i-\bar{X})(X_i-\bar{X})^\top$.
@@ -72,7 +72,7 @@ $$
 $$
 \hat{\Omega}_{\mathrm{EBIC}} = {\arg\min}_{\Omega} \left\{
 2\,\mathrm{nll}(\Omega) + \log(n)\,\lvert E(\Omega) \rvert +
-4\,\xi\,\log(d)\,\lvert E(\Omega) \rvert \right\},
+4\,\xi\,\log(p)\,\lvert E(\Omega) \rvert \right\},
 $$
 
 
@@ -85,7 +85,7 @@ the classic BIC.
 
 $$
 \hat{\Omega}_{\mathrm{HBIC}} = {\arg\min}_{\Omega} \left\{
-2\,\mathrm{nll}(\Omega) + \log[\log(n)]\,\log(d)\,\lvert E(\Omega) \rvert \right\}.
+2\,\mathrm{nll}(\Omega) + \log[\log(n)]\,\log(p)\,\lvert E(\Omega) \rvert \right\}.
 $$
 
 

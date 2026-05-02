@@ -4,10 +4,10 @@
 #' Compute a collection of loss-based and structure-based measures to evaluate
 #' the performance of an estimated precision matrix.
 #'
-#' @param hatOmega A numeric \eqn{d \times d} matrix giving the estimated
+#' @param hatOmega A numeric \eqn{p \times p} matrix giving the estimated
 #' precision matrix.
 #'
-#' @param Omega A numeric \eqn{d \times d} matrix giving the reference
+#' @param Omega A numeric \eqn{p \times p} matrix giving the reference
 #' (typically true) precision matrix.
 #'
 #' @return
@@ -23,7 +23,7 @@
 #' }
 #'
 #' @details
-#' Let \eqn{\Omega_{d \times d}} and \eqn{\hat{\Omega}_{d \times d}} be
+#' Let \eqn{\Omega_{p \times p}} and \eqn{\hat{\Omega}_{p \times p}} be
 #' the reference (true) and estimated precision matrices, respectively, with
 #' \eqn{\Sigma = \Omega^{-1}} being the corresponding covariance matrix.
 #' Edges are defined by nonzero off-diagonal entries in the upper triangle of
@@ -41,9 +41,9 @@
 #' \item "Frobenius": Frobenius (Hilbert-Schmidt) norm loss
 #' \eqn{= \Vert \Omega - \hat{\Omega} \Vert_F}.
 #' \item "KL": Kullback-Leibler divergence
-#' \eqn{= \mathrm{tr}(\Sigma \hat{\Omega}) - \log\det(\Sigma \hat{\Omega}) - d}.
+#' \eqn{= \mathrm{tr}(\Sigma \hat{\Omega}) - \log\det(\Sigma \hat{\Omega}) - p}.
 #' \item "quadratic": Quadratic norm loss
-#' \eqn{= \Vert \Sigma \hat{\Omega} - I_d \Vert_F^2}.
+#' \eqn{= \Vert \Sigma \hat{\Omega} - I_p \Vert_F^2}.
 #' \item "spectral": Spectral (operator) norm loss
 #' \eqn{= \Vert \Omega - \hat{\Omega} \Vert_{2,2} = e_1},
 #' where \eqn{e_1^2} is the largest eigenvalue of \eqn{(\Omega - \hat{\Omega})^2}.
@@ -91,7 +91,7 @@
 #' }
 #'
 #' @example
-#' inst/example/ex-performance.R
+#' inst/example/ex-grasps.R
 #'
 #' @export
 
@@ -101,24 +101,17 @@ performance <- function(hatOmega, Omega) {
   Sigma <- solve(Omega)
 
   ## dimension
-  d <- ncol(hatOmega)
+  p <- ncol(hatOmega)
 
   ## Frobenius norm loss
   FL <- norm(Omega - hatOmega, "F")
 
   ## Kullback-Leibler divergence
   KL <- sum(diag(Sigma %*% hatOmega)) -
-    determinant(Sigma %*% hatOmega, logarithm = TRUE)$modulus[1] - d
+    determinant(Sigma %*% hatOmega, logarithm = TRUE)$modulus[1] - p
 
   ## quadratic loss
-  QL <- norm(Sigma %*% hatOmega - diag(d), "F")^2
-  ## Alternative versions:
-  ## QL <- (sum(diag(Sigma %*% hatOmega - diag(d))))^2
-  ## Kuismin, M. O., Kemppainen, J. T., & Sillanpää, M. J. (2017).
-  ## Precision Matrix Estimation With ROPE.
-  ## Journal of Computational and Graphical Statistics, 26(3), 682–694.
-  ## https://doi.org/10.1080/10618600.2016.1278002
-  ## QL <- sum((hatOmega %*% Sigma - diag(d))^2) ## rags2ridges
+  QL <- norm(Sigma %*% hatOmega - diag(p), "F")^2
 
   ## spectral norm loss
   SL <- svd(Omega - hatOmega)$d[1]
@@ -142,15 +135,9 @@ performance <- function(hatOmega, Omega) {
 
   ## classification-based (structure-recovery) measures
   TPR <- TP / (TP + FN)
-  ## TPR <- TP / sum(Omega_edge != 0)
   FPR <- FP / (TN + FP)
-  ## FPR <- FP / sum(Omega_edge == 0)
   F1 <- 2 * TP / (2*TP + FN + FP)
-  ## F1 <- 2 * precision * recall / (precision + recall)
   MCC <- (TP * TN - FP * FN) / (sqrt(TP + FP) * sqrt(TP + FN) * sqrt(TN + FP) * sqrt(TN + FN))
-  ## MCC <- (TP * TN - FP * FN) / sqrt(
-  ##   sum(hatOmega_edge != 0) * sum(Omega_edge != 0) * sum(Omega_edge == 0) * sum(hatOmega_edge == 0)
-  ## )
 
   result <- data.frame(
     measure = c("sparsity", "Frobenius", "KL", "quadratic", "spectral",

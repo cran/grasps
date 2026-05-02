@@ -5,17 +5,17 @@
 #' element-wise and group-wise penalties to estimate a precision matrix.
 #'
 #' @param X \enumerate{
-#' \item An \eqn{n \times d} data matrix with sample size \eqn{n} and
-#' dimension \eqn{d}.
-#' \item A \eqn{d \times d} sample covariance matrix with dimension \eqn{d}.
+#' \item An \eqn{n \times p} data matrix with sample size \eqn{n} and
+#' dimension \eqn{p}.
+#' \item A \eqn{p \times p} sample covariance matrix with dimension \eqn{p}.
 #' }
 #'
 #' @param n An integer (default = \code{nrow(X)}) specifying the sample size.
-#' This is only required when the input matrix \code{X} is a \eqn{d \times d}
-#' sample covariance matrix with dimension \eqn{d}.
+#' This is only required when the input matrix \code{X} is a \eqn{p \times p}
+#' sample covariance matrix with dimension \eqn{p}.
 #'
 #' @param membership An integer vector specifying the group membership.
-#' The length of \code{membership} must be consistent with the dimension \eqn{d}.
+#' The length of \code{membership} must be consistent with the dimension \eqn{p}.
 #'
 #' @param penalty A character string specifying the penalty for estimating
 #' precision matrix. Available options include:
@@ -53,7 +53,7 @@
 #' its own \code{lambda} sequence based on \code{nlambda} and
 #' \code{lambda.min.ratio}.
 #'
-#' @param alpha A numeric vector in [0, 1] specifying the grid for
+#' @param alpha A numeric vector in [0,1] specifying the grid for
 #' the mixing parameter balancing the element-wise individual L1 penalty and
 #' the block-wise group L2 penalty.
 #' An alpha of 1 corresponds to the individual penalty only; an alpha of 0
@@ -76,11 +76,11 @@
 #' \code{lambda} values to generate when \code{lambda = NULL}.
 #'
 #' @param lambda.min.ratio A numeric value > 0 (default = 0.01) specifying
-#' the fraction of the maximum \code{lambda} value \eqn{\lambda_{max}} to
-#' generate the minimum \code{lambda} \eqn{\lambda_{min}}.
+#' the fraction of the maximum \code{lambda} value \eqn{\lambda_{\max}} to
+#' generate the minimum \code{lambda} \eqn{\lambda_{\min}}.
 #' If \code{lambda = NULL}, a \code{lambda} grid of length \code{nlambda} is
-#' automatically generated on a log scale, ranging from \eqn{\lambda_{max}}
-#' down to \eqn{\lambda_{min}}.
+#' automatically generated on a log scale, ranging from \eqn{\lambda_{\max}}
+#' down to \eqn{\lambda_{\min}}.
 #'
 #' @param growiter.lambda An integer (default = 30) specifying the maximum
 #' number of exponential growth steps during the initial search for an
@@ -134,7 +134,7 @@
 #' @param kfold An integer (default = 5) specifying the number of folds used for
 #' \code{crit = "CV"}.
 #'
-#' @param ebic.tuning A numeric value in [0, 1] (default = 0.5) specifying
+#' @param ebic.tuning A numeric value in [0,1] (default = 0.5) specifying
 #' the tuning parameter to calculate for \code{crit = "EBIC"}.
 #'
 #' @return
@@ -183,9 +183,9 @@ grasps <- function(X, n = nrow(X), membership, penalty,
                    tol.abs = 1e-04, tol.rel = 1e-04, maxiter = 1e+04,
                    crit = "BIC", kfold = 5, ebic.tuning = 0.5) {
 
-  d <- ncol(X)
+  p <- ncol(X)
 
-  if (length(membership) != d) {
+  if (length(membership) != p) {
     stop('The length of `membership` must equal the column dimension of `X`!')
   }
 
@@ -302,7 +302,7 @@ grasps <- function(X, n = nrow(X), membership, penalty,
     if (crit == "CV") {
 
       if(is.null(X)) {
-        stop('CV requires the n-by-d data matrix!')
+        stop('CV requires the n-by-p data matrix!')
       }
 
       if (kfold < 2 | kfold > n) {

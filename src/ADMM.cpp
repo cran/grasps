@@ -13,14 +13,14 @@ List ADMMsggl(const arma::mat& S, const List& group_idx,
               double rho, const double tau_incr, const double tau_decr, const double nu,
               const double tol_abs, const double tol_rel, const int maxiter) {
 
-  int d = S.n_cols;
+  int p = S.n_cols;
   int iter = 0;
   arma::mat Omega = arma::diagmat(1/arma::diagvec(S));
-  arma::mat Z = arma::zeros(d, d);
-  arma::mat U = arma::zeros(d, d);
+  arma::mat Z = arma::zeros(p, p);
+  arma::mat U = arma::zeros(p, p);
   arma::mat Z_old = Z;
 
-  arma::mat I = arma::ones(d, d);
+  arma::mat I = arma::ones(p, p);
   if (!diag_ind) {
     I -= arma::diagmat(I);
   }
@@ -85,8 +85,8 @@ List ADMMsggl(const arma::mat& S, const List& group_idx,
     double s = arma::norm(rho*(Z - Z_old), "fro");
 
     // tolerance
-    double tol_pri = d * tol_abs + tol_rel * std::max(arma::norm(Omega, "fro"), arma::norm(Z, "fro"));
-    double tol_dual = d * tol_abs + tol_rel * rho * arma::norm(U, "fro");
+    double tol_pri = p * tol_abs + tol_rel * std::max(arma::norm(Omega, "fro"), arma::norm(Z, "fro"));
+    double tol_dual = p * tol_abs + tol_rel * rho * arma::norm(U, "fro");
 
     if (r <= tol_pri && s <= tol_dual) {
       break;
@@ -124,18 +124,18 @@ List ADMMsggn(const arma::mat& S, const List& group_idx, std::string penalty,
               double rho, const double tau_incr, const double tau_decr, const double nu,
               const double tol_abs, const double tol_rel, const int maxiter) {
 
-  int d = S.n_cols;
+  int p = S.n_cols;
   int iter = 0;
   arma::mat Omega = arma::diagmat(1/arma::diagvec(S));
-  arma::mat Z = arma::zeros(d, d);
-  arma::mat U = arma::zeros(d, d);
+  arma::mat Z = arma::zeros(p, p);
+  arma::mat U = arma::zeros(p, p);
   arma::mat Z_old = Z;
   List sgglres = ADMMsggl(S, group_idx, diag_ind, diag_grp, diag_include, lambda, alpha,
                           rho, tau_incr, tau_decr, nu,
                           tol_abs, tol_rel, maxiter);
   arma::mat initial = sgglres["hatOmega"];
 
-  arma::mat I = arma::ones(d, d);
+  arma::mat I = arma::ones(p, p);
   if (!diag_ind) {
     I -= arma::diagmat(I);
   }
@@ -164,8 +164,8 @@ List ADMMsggn(const arma::mat& S, const List& group_idx, std::string penalty,
     double s = arma::norm(rho*(Z - Z_old), "fro");
 
     // tolerance
-    double tol_pri = d * tol_abs + tol_rel * std::max(arma::norm(Omega, "fro"), arma::norm(Z, "fro"));
-    double tol_dual = d * tol_abs + tol_rel * rho * arma::norm(U, "fro");
+    double tol_pri = p * tol_abs + tol_rel * std::max(arma::norm(Omega, "fro"), arma::norm(Z, "fro"));
+    double tol_dual = p * tol_abs + tol_rel * rho * arma::norm(U, "fro");
 
     if (r <= tol_pri && s <= tol_dual) {
       break;
@@ -215,9 +215,6 @@ List ADMMsggm(const arma::mat& S, const List& group_idx, std::string penalty,
                     tol_abs, tol_rel, maxiter);
   }
 }
-
-
-
 
 
 // ADMMsggm_CV

@@ -7,11 +7,11 @@
 sparsify_block_banded(mat, membership, neighbor.range = 1)
 }
 \arguments{
-\item{mat}{A \eqn{d \times d} precision-like matrix specifying the base
+\item{mat}{A \eqn{p \times p} precision-like matrix specifying the base
 matrix to be masked.}
 
 \item{membership}{An integer vector specifying the group membership.
-The length of \code{membership} must be consistent with the dimension \eqn{d}.}
+The length of \code{membership} must be consistent with the dimension \eqn{p}.}
 
 \item{neighbor.range}{An integer (default = 1) specifying the neighbor range,
 where groups whose labels differ by at most \code{neighbor.range} are

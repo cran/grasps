@@ -26,7 +26,7 @@ double criterion(const arma::mat& hatOmega, const arma::mat& S, int n,
                  const std::string& crit, double ebic_tuning) {
 
   // dimensionality
-  int d = S.n_cols;
+  int p = S.n_cols;
   // Gaussian log-likelihood
   double sign, logdet;
   arma::log_det(logdet, sign, hatOmega);
@@ -49,10 +49,10 @@ double criterion(const arma::mat& hatOmega, const arma::mat& S, int n,
     return -2*loglik + std::log(n)*edges;
   }
   else if (crit == "EBIC") {
-    return -2*loglik + std::log(n)*edges + 4*ebic_tuning*std::log(d)*edges;
+    return -2*loglik + std::log(n)*edges + 4*ebic_tuning*std::log(p)*edges;
   }
   else if (crit == "HBIC") {
-    return -2*loglik + std::log(std::log(n))*std::log(d)*edges;
+    return -2*loglik + std::log(std::log(n))*std::log(p)*edges;
   }
   else {
     Rcpp::stop("Unknown criterion!");

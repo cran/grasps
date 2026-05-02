@@ -34,17 +34,17 @@ grasps(
 }
 \arguments{
 \item{X}{\enumerate{
-\item An \eqn{n \times d} data matrix with sample size \eqn{n} and
-dimension \eqn{d}.
-\item A \eqn{d \times d} sample covariance matrix with dimension \eqn{d}.
+\item An \eqn{n \times p} data matrix with sample size \eqn{n} and
+dimension \eqn{p}.
+\item A \eqn{p \times p} sample covariance matrix with dimension \eqn{p}.
 }}
 
 \item{n}{An integer (default = \code{nrow(X)}) specifying the sample size.
-This is only required when the input matrix \code{X} is a \eqn{d \times d}
-sample covariance matrix with dimension \eqn{d}.}
+This is only required when the input matrix \code{X} is a \eqn{p \times p}
+sample covariance matrix with dimension \eqn{p}.}
 
 \item{membership}{An integer vector specifying the group membership.
-The length of \code{membership} must be consistent with the dimension \eqn{d}.}
+The length of \code{membership} must be consistent with the dimension \eqn{p}.}
 
 \item{penalty}{A character string specifying the penalty for estimating
 precision matrix. Available options include:
@@ -82,7 +82,7 @@ the regularization parameter. The default is \code{NULL}, which generates
 its own \code{lambda} sequence based on \code{nlambda} and
 \code{lambda.min.ratio}.}
 
-\item{alpha}{A numeric vector in [0, 1] specifying the grid for
+\item{alpha}{A numeric vector in [0,1] specifying the grid for
 the mixing parameter balancing the element-wise individual L1 penalty and
 the block-wise group L2 penalty.
 An alpha of 1 corresponds to the individual penalty only; an alpha of 0
@@ -105,11 +105,11 @@ the chosen \code{penalty}. The default value depends on the penalty:
 \code{lambda} values to generate when \code{lambda = NULL}.}
 
 \item{lambda.min.ratio}{A numeric value > 0 (default = 0.01) specifying
-the fraction of the maximum \code{lambda} value \eqn{\lambda_{max}} to
-generate the minimum \code{lambda} \eqn{\lambda_{min}}.
+the fraction of the maximum \code{lambda} value \eqn{\lambda_{\max}} to
+generate the minimum \code{lambda} \eqn{\lambda_{\min}}.
 If \code{lambda = NULL}, a \code{lambda} grid of length \code{nlambda} is
-automatically generated on a log scale, ranging from \eqn{\lambda_{max}}
-down to \eqn{\lambda_{min}}.}
+automatically generated on a log scale, ranging from \eqn{\lambda_{\max}}
+down to \eqn{\lambda_{\min}}.}
 
 \item{growiter.lambda}{An integer (default = 30) specifying the maximum
 number of exponential growth steps during the initial search for an
@@ -163,7 +163,7 @@ selection criterion to use. Available options include:
 \item{kfold}{An integer (default = 5) specifying the number of folds used for
 \code{crit = "CV"}.}
 
-\item{ebic.tuning}{A numeric value in [0, 1] (default = 0.5) specifying
+\item{ebic.tuning}{A numeric value in [0,1] (default = 0.5) specifying
 the tuning parameter to calculate for \code{crit = "EBIC"}.}
 }
 \value{
@@ -203,27 +203,36 @@ library(grasps)
 set.seed(1234)
 
 ## block-structured precision matrix based on SBM
-sim <- gen_prec_sbm(d = 30, K = 3,
+sim <- gen_prec_sbm(p = 30, K = 3,
                     within.prob = 0.25, between.prob = 0.05,
                     weight.dists = list("gamma", "unif"),
                     weight.paras = list(c(shape = 20, rate = 10),
                                         c(min = 0, max = 5)),
                     cond.target = 100)
-## visualization
+## ground truth visualization
 plot(sim)
 
-## n-by-d data matrix
+## n-by-p data matrix
 library(MASS)
 X <- mvrnorm(n = 20, mu = rep(0, 30), Sigma = sim$Sigma)
 
-## adapt, HBIC
-res <- grasps(X = X, membership = sim$membership, penalty = "adapt", crit = "HBIC")
+## precision matrix: adaptive lasso; BIC
+prec <- grasps(X = X, membership = sim$membership, penalty = "adapt", crit = "BIC")
 
-## visualization
-plot(res)
+## precision matrix visualization
+plot(prec)
 
 ## performance
-performance(hatOmega = res$hatOmega, Omega = sim$Omega)
+performance(hatOmega = prec$hatOmega, Omega = sim$Omega)
+
+## adjacency matrix: diagonal = 0; raw partial correlations;
+##                   no thresholding; weighted network
+adj <- prec_to_adj(prec$hatOmega,
+                   diag.zero = TRUE, absolute = FALSE,
+                   threshold = NULL, weighted = TRUE)
+
+## adjacency matrix visualization
+plot(adj)
 }
 \references{
 \insertAllCited{}

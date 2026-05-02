@@ -46,30 +46,25 @@ plot.blkmat <- function(x, colors = NULL, ...) {
     mat <- x$Omega
   }
 
-  d <- ncol(mat)
+  p <- ncol(mat)
 
   ## compute group sizes and boundary positions for dashed lines
   grp_sizes <- table(x$membership)
   cuts <- cumsum(grp_sizes)
   bnds <- cuts[-length(cuts)] + 0.5 ## boundaries between groups
-  y_bnds <- d - bnds + 1  ## flipped y, note: scale_y_discrete(limits = rev)
+  y_bnds <- p - bnds + 1  ## flipped y, note: scale_y_discrete(limits = rev)
 
   ## declare
   Col <- Row <- value <- NULL
 
   ## plot data
-  labs <- paste0("V", seq_len(d))
+  labs <- as.character(seq_len(p))
   plotData <- data.frame(
-    Row = factor(rep(labs, times = d),  levels = labs),
-    Col = factor(rep(labs, each = d), levels = labs),
+    Row = factor(rep(labs, times = p),  levels = labs),
+    Col = factor(rep(labs, each = p), levels = labs),
     value = as.vector(mat),
     check.names = FALSE
   )
-  # plotData <- as.data.frame(mat) %>%
-  #   mutate(Row = factor(paste0("V", rownames(.)),
-  #                       levels = paste0("V", rownames(.)))) %>%
-  #   pivot_longer(-Row, names_to = "Col", values_to = "value") %>%
-  #   mutate(Col = factor(Col, levels = levels(Row)))
 
   ## zero -> NA for better white rendering
   plotData$value[plotData$value == 0] <- NA
@@ -95,7 +90,7 @@ plot.blkmat <- function(x, colors = NULL, ...) {
     geom_vline(xintercept = bnds, linetype = "dashed") +
     geom_hline(yintercept = y_bnds, linetype = "dashed") +
     labs(x = NULL, y = NULL,
-         title = sprintf("Dimension = %d, Sparsity = %s", d, round(sparsity, 4))) +
+         title = sprintf("Dimension = %d, Sparsity = %.4f", p, sparsity)) +
     theme_bw() +
     theme(axis.text = element_blank(),
           axis.ticks = element_blank(),

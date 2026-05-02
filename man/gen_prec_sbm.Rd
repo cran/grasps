@@ -5,7 +5,7 @@
 \title{Block-Structured Precision Matrix based on SBM}
 \usage{
 gen_prec_sbm(
-  d,
+  p,
   block.sizes = NULL,
   K = 3,
   prob.mat = NULL,
@@ -18,10 +18,10 @@ gen_prec_sbm(
 )
 }
 \arguments{
-\item{d}{An integer specifying the number of variables (dimensions).}
+\item{p}{An integer specifying the number of variables (dimensions).}
 
 \item{block.sizes}{An integer vector (default = \code{NULL}) specifying
-the size of each group. If \code{NULL}, the \eqn{d} variables are divided
+the size of each group. If \code{NULL}, the \eqn{p} variables are divided
 as evenly as possible across \eqn{K} groups.}
 
 \item{K}{An integer (default = 3) specifying the number of groups.
@@ -33,15 +33,15 @@ creating an edge between vertices from groups \eqn{i} and \eqn{j}.
 If \code{NULL}, a matrix with \code{within.prob} on the diagonal and
 \code{between.prob} on the off-diagonal is used.}
 
-\item{within.prob}{A numeric value in [0, 1] (default = 0.25) specifying
+\item{within.prob}{A numeric value in [0,1] (default = 0.25) specifying
 the probability of creating an edge between vertices within the same group.
 This argument is used only when \code{prob.mat = NULL}.}
 
-\item{between.prob}{A numeric value in [0, 1] (default = 0.05) specifying
+\item{between.prob}{A numeric value in [0,1] (default = 0.05) specifying
 the probability of creating an edge between vertices from different groups.
 This argument is used only when \code{prob.mat = NULL}.}
 
-\item{weight.mat}{A \eqn{d \times d} symmetric matrix (default = \code{NULL})
+\item{weight.mat}{A \eqn{p \times p} symmetric matrix (default = \code{NULL})
 specifying the edge weights. If \code{NULL}, weights are generated block-wise
 according to \code{weight.dists} and \code{weight.paras}.}
 
@@ -158,7 +158,7 @@ set.seed(1234)
 
 ## block-structured precision matrix based on SBM
 #### case 1: base R distribution
-sim1 <- gen_prec_sbm(d = 100, K = 5,
+sim1 <- gen_prec_sbm(p = 100, K = 5,
                      within.prob = 0.25, between.prob = 0.1,
                      weight.dists = list("gamma", "unif"),
                      weight.paras = list(c(shape = 100, scale = 1e2),
@@ -171,7 +171,7 @@ plot(sim1)
 my_gamma <- function(n) {
   rgamma(n, shape = 1e4, scale = 1e2)
 }
-sim2 <- gen_prec_sbm(d = 100, K = 5,
+sim2 <- gen_prec_sbm(p = 100, K = 5,
                      within.prob = 0.2, between.prob = 0.05,
                      weight.dists = list(my_gamma, "unif"),
                      weight.paras = list(NULL,

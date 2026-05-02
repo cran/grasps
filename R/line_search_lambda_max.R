@@ -16,7 +16,7 @@
 #' upper bound for \eqn{\lambda_{\max}}. If the value is negative, the search
 #' starts from 1.
 #'
-#' @param alpha A numeric value in (0, 1) specifying the mixture weight between
+#' @param alpha A numeric value in (0,1) specifying the mixture weight between
 #' the individual (L1) and group (L2) penalties in sparse-group formulations.
 #'
 #' @param growiter An integer specifying the maximum number of exponential

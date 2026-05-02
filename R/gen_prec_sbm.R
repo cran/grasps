@@ -4,10 +4,10 @@
 #' Generate a precision matrix that exhibits block structure induced by
 #' a stochastic block model (SBM).
 #'
-#' @param d An integer specifying the number of variables (dimensions).
+#' @param p An integer specifying the number of variables (dimensions).
 #'
 #' @param block.sizes An integer vector (default = \code{NULL}) specifying
-#' the size of each group. If \code{NULL}, the \eqn{d} variables are divided
+#' the size of each group. If \code{NULL}, the \eqn{p} variables are divided
 #' as evenly as possible across \eqn{K} groups.
 #'
 #' @param K An integer (default = 3) specifying the number of groups.
@@ -19,15 +19,15 @@
 #' If \code{NULL}, a matrix with \code{within.prob} on the diagonal and
 #' \code{between.prob} on the off-diagonal is used.
 #'
-#' @param within.prob A numeric value in [0, 1] (default = 0.25) specifying
+#' @param within.prob A numeric value in [0,1] (default = 0.25) specifying
 #' the probability of creating an edge between vertices within the same group.
 #' This argument is used only when \code{prob.mat = NULL}.
 #'
-#' @param between.prob A numeric value in [0, 1] (default = 0.05) specifying
+#' @param between.prob A numeric value in [0,1] (default = 0.05) specifying
 #' the probability of creating an edge between vertices from different groups.
 #' This argument is used only when \code{prob.mat = NULL}.
 #'
-#' @param weight.mat A \eqn{d \times d} symmetric matrix (default = \code{NULL})
+#' @param weight.mat A \eqn{p \times p} symmetric matrix (default = \code{NULL})
 #' specifying the edge weights. If \code{NULL}, weights are generated block-wise
 #' according to \code{weight.dists} and \code{weight.paras}.
 #'
@@ -139,7 +139,7 @@
 #'
 #' @export
 
-gen_prec_sbm <- function(d,
+gen_prec_sbm <- function(p,
                          block.sizes = NULL, K = 3,
                          prob.mat = NULL, within.prob = 0.25, between.prob = 0.05,
                          weight.mat = NULL,
@@ -148,20 +148,20 @@ gen_prec_sbm <- function(d,
                                              c(min = 0, max = 5)),
                          cond.target = 100) {
 
-  ## block sizes (allow d not divisible by K)
+  ## block sizes (allow p not divisible by K)
   if (is.null(block.sizes)) {
-    block.sizes <- rep(floor(d / K), K)
-    rem <- d - sum(block.sizes)
+    block.sizes <- rep(floor(p / K), K)
+    rem <- p - sum(block.sizes)
     if (rem > 0) {
       block.sizes[seq_len(rem)] <- block.sizes[seq_len(rem)] + 1
     }
   }
-  stopifnot(sum(block.sizes) == d)
+  stopifnot(sum(block.sizes) == p)
   K <- length(block.sizes)
 
   ## membership and indices
   membership <- rep(1:K, times = block.sizes)
-  idx_list <- split(1:d, membership)
+  idx_list <- split(1:p, membership)
 
   ## probability matrix
   if (is.null(prob.mat)) {
@@ -172,32 +172,17 @@ gen_prec_sbm <- function(d,
   }
 
   ## SBM adjacency (undirected, no loops)
-  SBM_sim <- igraph::sample_sbm(n = d, pref.matrix = prob.mat,
+  SBM_sim <- igraph::sample_sbm(n = p, pref.matrix = prob.mat,
                                 block.sizes = block.sizes,
                                 directed = FALSE, loops = FALSE)
   SBM_adj <- as.matrix(igraph::as_adjacency_matrix(SBM_sim, sparse = FALSE))
-  # ## generate SBM adjacency (upper triangle once, then mirror)
-  # # SBM_adj <- matrix(0, d, d)
-  # for (i in 1:K) {
-  #   rows <- idx_list[[i]]
-  #   for (j in i:K) {
-  #     cols <- idx_list[[j]]
-  #     block <- matrix(rbinom(length(rows) * length(cols), 1, prob.mat[i,j]),
-  #                     length(rows), length(cols))
-  #     SBM_adj[rows, cols] <- block
-  #     if (j != i) {
-  #       SBM_adj[cols, rows] <- t(block)
-  #     }
-  #   }
-  # }
-  # diag(SBM_adj) <- 0
 
   ## build weights
   ## fill upper-triangular; mirror to keep symmetric.
   if (is.null(weight.mat)) {
     dists_expand <- expand_spec(weight.dists, K)
     paras_expand <- expand_spec(weight.paras, K)
-    weight.mat <- matrix(0, d, d)
+    weight.mat <- matrix(0, p, p)
     for (i in 1:K) {
       rows <- idx_list[[i]]
       nr <- length(rows)
