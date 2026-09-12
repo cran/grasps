@@ -1,7 +1,7 @@
 Package: grasps
 Type: Package
 Title: Groupwise Regularized Adaptive Sparse Precision Solution
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
     person(given = "Shiying", family = "Xiao",
            email = "shiying.xiao@outlook.com",
@@ -34,12 +34,12 @@ LinkingTo: Rcpp, RcppArmadillo
 RdMacros: Rdpack
 Suggests: knitr, MASS, quarto, rmarkdown
 VignetteBuilder: knitr, quarto
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
 NeedsCompilation: yes
-Packaged: 2026-05-02 22:33:30 UTC; csxiao
+Packaged: 2026-09-12 22:32:04 UTC; csxiao
 Author: Shiying Xiao [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-8846-3258>),
   Jun Yan [aut] (ORCID: <https://orcid.org/0000-0003-4401-7296>),
   Panpan Zhang [aut] (ORCID: <https://orcid.org/0000-0002-8211-5930>)
 Repository: CRAN
-Date/Publication: 2026-05-02 22:50:09 UTC
+Date/Publication: 2026-09-12 23:00:02 UTC

@@ -77,7 +77,7 @@ penalize the within-group blocks.}
 include the diagonal entries in the penalty for within-group blocks when
 \code{diag.grp = TRUE}.}
 
-\item{lambda}{A non-negative numeric vector specifying the grid for
+\item{lambda}{A positive numeric vector specifying the grid for
 the regularization parameter. The default is \code{NULL}, which generates
 its own \code{lambda} sequence based on \code{nlambda} and
 \code{lambda.min.ratio}.}
@@ -87,7 +87,9 @@ the mixing parameter balancing the element-wise individual L1 penalty and
 the block-wise group L2 penalty.
 An alpha of 1 corresponds to the individual penalty only; an alpha of 0
 corresponds to the group penalty only.
-The default value is a sequence from 0.1 to 0.9 with increments of 0.1.}
+The default value is a sequence from 0.1 to 0.9 with increments of 0.1.
+When both \code{alpha} and \code{lambda} are supplied,
+all Cartesian combinations of their values are evaluated.}
 
 \item{gamma}{A numeric value specifying the additional parameter fo
 the chosen \code{penalty}. The default value depends on the penalty:
@@ -179,8 +181,9 @@ is chosen via \code{penalty}.}
 \item{iterations}{The number of ADMM iterations.}
 \item{lambda.grid}{The actual lambda grid used in the program.}
 \item{alpha.grid}{The actual alpha grid used in the program.}
-\item{lambda.safe}{The bisection-refined upper bound \eqn{\lambda_{\max}},
-corresponding to \code{alpha.grid}, when \code{lambda = NULL}.}
+\item{lambda.safe}{The conservative upper bound used to initialize
+the line search for \eqn{\lambda_{\max}}, corresponding to each distinct
+value in \code{alpha.grid}, when \code{lambda = NULL}.}
 \item{loss}{The optimal k-fold loss when \code{crit = "CV"}.}
 \item{CV.loss}{Matrix of CV losses, with rows for parameter combinations and
 columns for CV folds, when \code{crit = "CV"}.}

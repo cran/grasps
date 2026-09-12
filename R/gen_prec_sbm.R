@@ -112,9 +112,11 @@
 #' }
 #'
 #' \strong{Positive definiteness.}
-#' The weighted adjacency matrix is symmetrized and used as the precision matrix
-#' \eqn{\Omega_0}. Since arbitrary block-structured weights may not be positive
-#' definite, a diagonal adjustment is applied to control the eigenvalue spectrum.
+#' Motivated by condition-number-regularized covariance estimation
+#' \insertCite{won2013condition}{grasps}, the weighted adjacency matrix is
+#' symmetrized and used as the precision matrix \eqn{\Omega_0}.
+#' Since arbitrary block-structured weights may not be positive definite,
+#' a diagonal adjustment is applied to control the eigenvalue spectrum.
 #' Specifically, let \eqn{\lambda_{\max}} and \eqn{\lambda_{\min}} denote
 #' the largest and smallest eigenvalues of a matrix. A non-negative numeric
 #' value \eqn{\tau} is added to the diagonal so that
@@ -132,6 +134,9 @@
 #' number does not exceed \code{cond.target}, providing numerical stability
 #' even in high-dimensional settings.
 #'
+#' @references
+#' \insertAllCited{}
+#'
 #' @example
 #' inst/example/ex-gen_prec_sbm.R
 #'
@@ -147,6 +152,11 @@ gen_prec_sbm <- function(p,
                          weight.paras = list(c(shape = 100, rate = 10),
                                              c(min = 0, max = 5)),
                          cond.target = 100) {
+
+  if (!is.numeric(cond.target) || length(cond.target) != 1 ||
+      !is.finite(cond.target) || cond.target <= 1) {
+    stop("`cond.target` must be a finite numeric value greater than 1.")
+  }
 
   ## block sizes (allow p not divisible by K)
   if (is.null(block.sizes)) {
@@ -186,7 +196,16 @@ gen_prec_sbm <- function(p,
     for (i in 1:K) {
       rows <- idx_list[[i]]
       nr <- length(rows)
-      weight.mat[rows, rows] <- draw_sample(dists_expand[[i]], paras_expand[[i]], nr*nr)
+      ## within-group weights: sample each undirected edge once
+      weight.block <- matrix(0, nr, nr)
+      upper.idx <- upper.tri(weight.block, diag = FALSE)
+      n.edges <- sum(upper.idx)
+      if (n.edges > 0) {
+        weight.block[upper.idx] <- draw_sample(dists_expand[[i]], paras_expand[[i]], n.edges)
+        weight.block <- weight.block + t(weight.block)
+      }
+      weight.mat[rows, rows] <- weight.block
+      ## between-group weights
       if (i < K) {
         for (j in (i+1):K) {
           cols <- idx_list[[j]]
@@ -203,11 +222,18 @@ gen_prec_sbm <- function(p,
   Omega <- SBM_adj * weight.mat
   Omega <- (Omega + t(Omega)) / 2 ## symmetric; diag still 0
 
+  ## check for an empty weighted graph
+  if (!any(Omega != 0)) {
+    stop("The generated graph contains no nonzero edges.\n",
+         "Please increase `within.prob` or `between.prob`, ",
+         "or provide a nonzero `prob.mat` or `weight.mat`.")
+  }
+
   ## ensure positive definiteness and control the condition number
   ## add a scalar tau to the diagonal so that
   ## lambda_max(Omega + tau*I) / lambda_min(Omega + tau*I) <= cond.target
   ## (diagonal loading shifts all eigenvalues by the same tau)
-  eigvals <- eigen(Omega, only.values = TRUE)$values
+  eigvals <- eigen(Omega, symmetric = TRUE, only.values = TRUE)$values
   eigval_max <- max(eigvals)
   eigval_min <- min(eigvals)
   tau <- max(0, ## no adjustment

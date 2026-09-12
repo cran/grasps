@@ -48,7 +48,7 @@
 #' include the diagonal entries in the penalty for within-group blocks when
 #' \code{diag.grp = TRUE}.
 #'
-#' @param lambda A non-negative numeric vector specifying the grid for
+#' @param lambda A positive numeric vector specifying the grid for
 #' the regularization parameter. The default is \code{NULL}, which generates
 #' its own \code{lambda} sequence based on \code{nlambda} and
 #' \code{lambda.min.ratio}.
@@ -59,6 +59,8 @@
 #' An alpha of 1 corresponds to the individual penalty only; an alpha of 0
 #' corresponds to the group penalty only.
 #' The default value is a sequence from 0.1 to 0.9 with increments of 0.1.
+#' When both \code{alpha} and \code{lambda} are supplied,
+#' all Cartesian combinations of their values are evaluated.
 #'
 #' @param gamma A numeric value specifying the additional parameter fo
 #' the chosen \code{penalty}. The default value depends on the penalty:
@@ -150,8 +152,9 @@
 #' \item{iterations}{The number of ADMM iterations.}
 #' \item{lambda.grid}{The actual lambda grid used in the program.}
 #' \item{alpha.grid}{The actual alpha grid used in the program.}
-#' \item{lambda.safe}{The bisection-refined upper bound \eqn{\lambda_{\max}},
-#' corresponding to \code{alpha.grid}, when \code{lambda = NULL}.}
+#' \item{lambda.safe}{The conservative upper bound used to initialize
+#' the line search for \eqn{\lambda_{\max}}, corresponding to each distinct
+#' value in \code{alpha.grid}, when \code{lambda = NULL}.}
 #' \item{loss}{The optimal k-fold loss when \code{crit = "CV"}.}
 #' \item{CV.loss}{Matrix of CV losses, with rows for parameter combinations and
 #' columns for CV folds, when \code{crit = "CV"}.}
@@ -199,11 +202,19 @@ grasps <- function(X, n = nrow(X), membership, penalty,
          Available options: "AIC", "BIC", "EBIC", "HBIC", "CV".')
   }
 
-  if (!all(lambda > 0)) {
+  lambda_null <- is.null(lambda)
+
+  if (!lambda_null &&
+      (!is.numeric(lambda) || length(lambda) == 0 ||
+       any(!is.finite(lambda)) || any(lambda <= 0))) {
     stop('The parameter `lambda` must be positive!')
   }
 
-  if (!all(alpha >= 0 & alpha <= 1)) {
+  alpha_null <- is.null(alpha)
+
+  if (!alpha_null &&
+      (!is.numeric(alpha) || length(alpha) == 0 ||
+       any(!is.finite(alpha)) || any(alpha < 0 | alpha > 1))) {
     stop('The parameter `alpha` must be in [0,1]!')
   }
 
@@ -242,26 +253,36 @@ grasps <- function(X, n = nrow(X), membership, penalty,
   group.idx <- lapply(grp, function(g) which(membership == g)-1)
   names(group.idx) <- grp
 
-  alpha_null <- is.null(alpha)
-  lambda_null <- is.null(lambda)
-
   if (alpha_null) {
     alpha <- seq(0.1, 0.9, 0.1)
   }
 
   if (lambda_null) {
-    max_abs.off <- max(abs(S[upper.tri(S, diag = FALSE)]))
+
+    if (length(nlambda) != 1 || !is.finite(nlambda) || nlambda < 1 ||
+        nlambda != as.integer(nlambda)) {
+      stop('The parameter `nlambda` must be a positive integer!')
+    }
+
+    if (length(lambda.min.ratio) != 1 || !is.finite(lambda.min.ratio) ||
+        lambda.min.ratio <= 0 || lambda.min.ratio > 1) {
+      stop('The parameter `lambda.min.ratio` must be in (0,1]!')
+    }
+
+    max_abs.off <- max(abs(S[upper.tri(S, diag = FALSE)]), 0)
     S2 <- S*S
     sum.row <- rowsum(S2, membership)
     block.sum <- rowsum(t(sum.row), membership)
     block.norm <- sqrt(block.sum)
-    max_block.norm.off <- max(block.norm[upper.tri(block.norm, diag = FALSE)])
+    max_block.norm.off <- max(block.norm[upper.tri(block.norm, diag = FALSE)], 0)
     idx_list <- split(seq_along(membership), membership)
     block.off_list <- list()
-    for (g in seq_along(idx_list)) {
-      for (gp in seq_along(idx_list)) {
-        if (g < gp) {
-          block.off_list[[length(block.off_list)+1]] <- S[idx_list[[g]], idx_list[[gp]], drop = FALSE]
+    if (length(idx_list) >= 2) {
+      for (g in seq_along(idx_list)) {
+        for (gp in seq_along(idx_list)) {
+          if (g < gp) {
+            block.off_list[[length(block.off_list)+1]] <- S[idx_list[[g]], idx_list[[gp]], drop = FALSE]
+          }
         }
       }
     }
@@ -269,25 +290,34 @@ grasps <- function(X, n = nrow(X), membership, penalty,
       lambda.ind <- ifelse(a > 0, max_abs.off / a, 0)
       lambda.grp <- ifelse(a < 1, max_block.norm.off / (1-a), 0)
       lambda.safe <- max(lambda.ind, lambda.grp)
-      if (a > 0 & a < 1) {
-        lambda.max <- line_search_lambda_max(block.off_list, lambda.safe, a, growiter.lambda, tol.lambda, maxiter.lambda)
+      if (a > 0 && a < 1 && length(block.off_list) > 0) {
+        lambda.max <- line_search_lambda_max(
+          blockList = block.off_list, lambda.safe = lambda.safe, alpha = a,
+          growiter = growiter.lambda, tol = tol.lambda, maxiter = maxiter.lambda)
       } else {
         lambda.max <- lambda.safe
       }
-      lambda.min <- lambda.min.ratio*lambda.max
+      if (!is.finite(lambda.max) || lambda.max <= 0) {
+        stop("Cannot generate a positive `lambda` sequence for alpha = ", a,
+             ": the computed `lambda.max` is ", lambda.max,
+             ".\nPlease supply a positive `lambda` explicitly.")
+      }
+      lambda.min <- lambda.min.ratio * lambda.max
       return(list(lambda = exp(seq(log(lambda.max), log(lambda.min), length = nlambda)),
                   lambda.safe = lambda.safe))
     })
-    lambda <- unlist(lapply(lambda_path, `[[`, "lambda"))
     lambda.safe <- sapply(lambda_path, `[[`, "lambda.safe")
     names(lambda.safe) <- alpha
   }
 
-  if (lambda_null & alpha_null) {
-    parameter <- data.frame(alpha = rep(alpha, each = nlambda),
-                            lambda = lambda)
+  if (lambda_null) {
+    parameter <- do.call(rbind, lapply(seq_along(alpha), function(k) {
+      data.frame(alpha = rep(alpha[k], nlambda), lambda = lambda_path[[k]]$lambda)
+    }))
+    rownames(parameter) <- NULL
   } else {
-    parameter <- data.frame(alpha = alpha, lambda = lambda)
+    parameter <- data.frame(alpha = rep(alpha, each = length(lambda)),
+                            lambda = rep(lambda, times = length(alpha)))
   }
 
   ## default gamma by penalty
@@ -321,8 +351,6 @@ grasps <- function(X, n = nrow(X), membership, penalty,
                          lambda = CV$lambda.opt, alpha = CV$alpha.opt, gamma = gamma,
                          rho = rho, tau_incr = tau.incr, tau_decr = tau.decr, nu = nu,
                          tol_abs = tol.abs, tol_rel = tol.rel, maxiter = maxiter)
-      result$lambda.grid <- parameter$lambda
-      result$alpha.grid <- parameter$alpha
       if (lambda_null) {
         result$lambda.safe <- lambda.safe
       }
@@ -339,8 +367,6 @@ grasps <- function(X, n = nrow(X), membership, penalty,
                         crit = crit, n = n, ebic_tuning = ebic.tuning)
 
       result <- IC$result
-      result$lambda.grid <- parameter$lambda
-      result$alpha.grid <- parameter$alpha
       if (lambda_null) {
         result$lambda.safe <- lambda.safe
       }
@@ -353,7 +379,7 @@ grasps <- function(X, n = nrow(X), membership, penalty,
 
     result <- ADMMsggm(S = S, group_idx = group.idx, penalty = penalty,
                        diag_ind = diag.ind, diag_grp = diag.grp, diag_include = diag.include,
-                       lambda = lambda, alpha = alpha, gamma = gamma,
+                       lambda = parameter$lambda, alpha = parameter$alpha, gamma = gamma,
                        rho = rho, tau_incr = tau.incr, tau_decr = tau.decr, nu = nu,
                        tol_abs = tol.abs, tol_rel = tol.rel, maxiter = maxiter)
 
@@ -362,6 +388,9 @@ grasps <- function(X, n = nrow(X), membership, penalty,
     }
 
   }
+
+  result$lambda.grid <- parameter$lambda
+  result$alpha.grid <- parameter$alpha
 
   result$membership <- membership
   class(result) <- c("grasps", "blkmat")

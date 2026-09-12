@@ -12,9 +12,10 @@
 #' @param blockList A list of numeric matrices where each element is a block
 #' used in the group KKT check.
 #'
-#' @param lambda.safe A numeric value representing a safe (but possibly loose)
-#' upper bound for \eqn{\lambda_{\max}}. If the value is negative, the search
-#' starts from 1.
+#' @param lambda.safe A numeric value specifying the initial conservative
+#' upper bound for the search for \eqn{\lambda_{\max}}.
+#' If \code{lambda.safe <= 0}, the search starts from 1.
+#' This value is not necessarily the final bisection-refined \eqn{\lambda_{\max}}.
 #'
 #' @param alpha A numeric value in (0,1) specifying the mixture weight between
 #' the individual (L1) and group (L2) penalties in sparse-group formulations.
@@ -42,11 +43,14 @@
 #' @noRd
 
 line_search_lambda_max <- function(blockList, lambda.safe, alpha, growiter, tol, maxiter) {
-  stopifnot(is.list(blockList), length(blockList) > 0, alpha > 0, alpha < 1)
+  stopifnot(is.list(blockList), alpha > 0, alpha < 1)
+  if (length(blockList) == 0) {
+    return(lambda.safe)
+  }
   KKTcheck <- function(lambda) {
     for (B in blockList) {
       Thres <- matrix(lambda*alpha, nrow(B), ncol(B))
-      if (norm(soft_matrix(B, Thres), "F") > lambda*(1-alpha)+tol) {
+      if (norm(soft_matrix(B, Thres), "F") > lambda*(1-alpha)) {
         return(FALSE)
       }
     }

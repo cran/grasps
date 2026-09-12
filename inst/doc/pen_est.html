@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,10 +10,13 @@
 <title>Penalized Precision Matrix Estimation in grasps</title>
 <style>
 
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -235,7 +238,7 @@ text-decoration: underline; }
 <p>Consider the following setting:</p>
 <ul>
 <li><p><strong>Gaussian graphical model (GGM) assumption:</strong><br>
-The data <span class="math inline"><em>X</em><sub><em>p</em> × <em>p</em></sub></span> consists of independent and identically distributed samples <span class="math inline"><em>X</em><sub>1</sub>, …, <em>X</em><sub><em>n</em></sub> ∼ <em>N</em><sub><em>p</em></sub>(<em>μ</em>, <em>Σ</em>)</span>.</p></li>
+The data <span class="math inline"><em>X</em><sub><em>n</em> × <em>p</em></sub></span> consists of independent and identically distributed samples <span class="math inline"><em>X</em><sub>1</sub>, …, <em>X</em><sub><em>n</em></sub> ∼ <em>N</em><sub><em>p</em></sub>(<em>μ</em>, <em>Σ</em>)</span>.</p></li>
 <li><p><strong>Disjoint group structure:</strong><br>
 The <span class="math inline"><em>p</em></span> variables can be partitioned into disjoint groups.</p></li>
 <li><p><strong>Goal:</strong><br>

@@ -16,8 +16,10 @@ import(ggplot2)
 importFrom(Rcpp,evalCpp)
 importFrom(Rdpack,reprompt)
 importFrom(grDevices,colorRampPalette)
-importFrom(igraph,as_adjacency_matrix)
-importFrom(igraph,sample_sbm)
+importFrom(igraph,
+  as_adjacency_matrix,
+  sample_sbm
+)
 importFrom(scales,rescale)
 importFrom(stats,cov)
 useDynLib(grasps, .registration = TRUE)
